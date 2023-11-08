@@ -1,0 +1,80 @@
+<!-- Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT License. -->
+<!DOCTYPE html>
+<html>
+
+<head>
+    <!-- Office JavaScript API -->
+    <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+   
+
+</head>
+
+<body>
+    <p>This add-in will insert the text 'Hello world!' in a new message.</p>
+    <button id="helloButton">Say hello</button>
+    <button id="downloadAttachmentsButton">Download Attachments</button>
+
+    <!-- The following image URL tracks diagnostic data for this sample add-in. Please remove the image tag if you reuse this sample in your own code project. -->
+    <img src="https://pnptelemetry.azurewebsites.net/pnp-officeaddins/samples/outlook-add-in-hello-world-run" />
+</body>
+
+<script>
+
+    Office.onReady((info) => {
+        if (info.host === Office.HostType.Outlook) {
+            document.getElementById("helloButton").onclick = sayHello;
+        }
+    });
+
+    /**
+     * Writes 'Hello world!' to a new message body.
+     */
+    function sayHello() {
+        Office.context.mailbox.item.body.setAsync(
+            "Hello world!",
+            {
+                coercionType: "html", // Write text as HTML
+            },
+
+            // Callback method to check that setAsync succeeded
+            function (asyncResult) {
+                if (asyncResult.status ==
+                    Office.AsyncResultStatus.Failed) {
+                    write(asyncResult.error.message);
+                }
+            }
+        );
+    }
+    function downloadAttachments() {
+        Office.context.mailbox.item.getAttachmentsAsync(function (result) {
+            if (result.status === Office.MailboxEnums.RequestStatus.Succeeded) {
+                var attachments = result.value;
+
+                if (attachments.length > 0) {
+                    attachments.forEach(function (attachment) {
+                        attachment.getAttachmentContentAsync(function (contentResult) {
+                            if (contentResult.status === Office.MailboxEnums.RequestStatus.Succeeded) {
+                                var content = contentResult.value;
+                                var blob = new Blob([content], { type: attachment.contentType });
+                                var url = window.URL.createObjectURL(blob);
+
+                                var a = document.createElement('a');
+                                a.href = url;
+                                a.download = attachment.name;
+                                a.click();
+                            }
+                        });
+                    });
+                } else {
+                    // No attachments found
+                }
+            }
+        });
+    }
+
+   
+
+
+</script>
+
+</html>
